@@ -12,5 +12,4 @@ Then create a task for the project inside Windows Task Scheduler with the follow
 I will later make this project into an actual .exe file which will inject itself directly into the Task Scheduler so the above will be reduced to one step.
 
 # Caution
-
 If you have too much caffeine in your system, you may delete the scheduled closure and shutdown directly from the Task Scheduler. But that's cheating don't do that

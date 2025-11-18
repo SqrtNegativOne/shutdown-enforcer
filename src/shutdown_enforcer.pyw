@@ -78,6 +78,11 @@ def delete_existing_tasks():
 def create_task(name: str, command: str, run_time):
     if isinstance(run_time, str):
         run_time = parse_time(run_time)
+    
+    now = datetime.now(_LOCAL_TZ)
+    if run_time < now:
+        logger.info(f"Requested run_time {run_time} is in the past. Giving up on this task.")
+        return
 
     date_str = run_time.strftime("%d/%m/%Y")
     time_str = run_time.strftime("%H:%M:%S")
