@@ -40,4 +40,8 @@ if __name__ == "__main__":
         sys.exit(1)
     title = sys.argv[1]
     message = sys.argv[2]
-    notif(title, message)
+    try:
+        notif(title, message)
+    except Exception as e:
+        logger.error(f"Failed to show notification: {e}")
+        sys.exit(1)

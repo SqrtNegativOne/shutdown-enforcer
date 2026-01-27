@@ -2,7 +2,6 @@ import subprocess
 import ctypes
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
-import sys
 from typing import Final
 from pathlib import Path
 import psutil
@@ -119,9 +118,6 @@ def setup_tasks():
     closure_diff = int((app_closure - initial_notif).total_seconds() // 60)
     shutdown_diff = int((shutdown - app_closure).total_seconds() // 60)
 
-    py = sys.executable
-    script = Path(__file__).resolve()
-
     create_task(
         "InitialNotif",
         get_py_file_cmd("notify.pyw", f'"Closure in {closure_diff} minutes (at {APP_CLOSURE})"'),
@@ -156,12 +152,6 @@ def setup_tasks():
         "Shutdown",
         get_py_file_cmd("shutdown.pyw"),
         shutdown
-    )
-
-    create_task(
-        "PostShutdownReminder",
-        get_py_file_cmd("notify.pyw", f'"Shutdown may have failed. Please shut down manually."'),
-        shutdown + timedelta(seconds=POST_SHUTDOWN_REMINDER_WAIT_SECONDS)
     )
 
     logger.info("All tasks created successfully.")

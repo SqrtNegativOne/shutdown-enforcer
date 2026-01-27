@@ -4,6 +4,10 @@ import win32process
 import psutil
 from utils import logger
 
+app_closure_prompt = """All possible foreground windows have been closed.
+Now perform shutdown ritual.
+"""
+
 def enum_window_callback(hwnd, _):
     if not win32gui.IsWindowVisible(hwnd) or not win32gui.IsWindowEnabled(hwnd):
         return
