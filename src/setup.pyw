@@ -158,4 +158,8 @@ def setup_tasks():
 
 
 if __name__ == "__main__":
-    setup_tasks()
+    logger.info("Starting setup.pyw")
+    try:
+        setup_tasks()
+    except Exception as e:
+        logger.error(f"Error in setup.pyw: {e}")

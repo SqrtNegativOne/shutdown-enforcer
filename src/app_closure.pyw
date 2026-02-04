@@ -34,4 +34,7 @@ def enum_window_callback(hwnd, _):
     except Exception as e:
         logger.error(f"Failed to close '{window_title}': {e}")
 
-win32gui.EnumWindows(enum_window_callback, None)
+try:
+    win32gui.EnumWindows(enum_window_callback, None)
+except Exception as e:
+    logger.error(f"Error in app_closure.pyw: {e}")
