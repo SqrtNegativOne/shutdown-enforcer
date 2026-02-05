@@ -38,11 +38,25 @@ def parse_time(t: str):
     return now.replace(hour=ti.hour, minute=ti.minute, second=0, microsecond=0)
 
 
+def _hidden_startupinfo():
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = subprocess.SW_HIDE
+    return si
+
+
 def run_cmd(args):
     """Run a command safely, log output, and raise on failure."""
     logger.info(f"Running command: {' '.join(args)}")
     try:
-        result = subprocess.run(args, check=True, capture_output=True, text=True)
+        result = subprocess.run(
+            args,
+            check=True,
+            capture_output=True,
+            text=True,
+            startupinfo=_hidden_startupinfo(),
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
         if result.stdout.strip():
             logger.info(result.stdout.strip())
     except subprocess.CalledProcessError as e:
@@ -56,7 +70,9 @@ def delete_existing_tasks():
         ["schtasks", "/query", "/fo", "CSV", "/v"],
         capture_output=True,
         text=True,
-        encoding="utf-8"
+        encoding="utf-8",
+        startupinfo=_hidden_startupinfo(),
+        creationflags=subprocess.CREATE_NO_WINDOW,
     )
     for line in result.stdout.splitlines():
         if TASK_PREFIX in line:
@@ -64,7 +80,9 @@ def delete_existing_tasks():
             logger.info(f"Deleting old task {task_name}")
             subprocess.run(
                 ["schtasks", "/delete", "/tn", task_name, "/f"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                startupinfo=_hidden_startupinfo(),
+                creationflags=subprocess.CREATE_NO_WINDOW,
             )
 
 
@@ -88,7 +106,9 @@ def create_task(name: str, command: str, run_time):
         "/sc", "once",
         "/sd", date_str,
         "/st", time_str,
-        "/ru", f"{psutil.Process().username()}"
+        "/ru", psutil.Process().username(),
+        "/rl", "HIGHEST",
+        "/f",
     ]
 
     logger.info(f"Creating task: {full_name} at {run_time.isoformat()}")
@@ -96,7 +116,7 @@ def create_task(name: str, command: str, run_time):
 
 
 def get_py_file_cmd(file_path: str, args: str = "") -> str:
-    py = Path(r".venv\Scripts\python.exe").resolve()
+    py = Path(r".venv\Scripts\pythonw.exe").resolve()
     script = Path(file_path).resolve()
     return f'"{py}" "{script}" {args}'
 
