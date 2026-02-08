@@ -24,6 +24,10 @@ POST_SHUTDOWN_REMINDER_WAIT_SECONDS: Final[int] = 60
 
 TASK_PREFIX: Final[str] = "ShutdownEnforcer_"
 
+ROOT_DIR = Path(__file__).parent.parent.resolve()
+SCRIPT_DIR = ROOT_DIR / "src"
+VENV_PY_EXE = ROOT_DIR / ".venv" / "Scripts" / "pythonw.exe"
+
 
 def is_admin() -> bool:
     try:
@@ -116,9 +120,7 @@ def create_task(name: str, command: str, run_time):
 
 
 def get_py_file_cmd(file_path: str, args: str = "") -> str:
-    py = Path(r".venv\Scripts\pythonw.exe").resolve()
-    script = Path(file_path).resolve()
-    return f'"{py}" "{script}" {args}'
+    return f'"{VENV_PY_EXE}" "{SCRIPT_DIR / file_path}" {args}'
 
 def setup_tasks():
     if not is_admin():
