@@ -36,10 +36,12 @@ def notif(title, message, ms=SHOW_MILLISECONDS):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 3:
-        logger.error("Insufficient arguments for notification.")
-        sys.exit(1)
-    title = sys.argv[1]
-    message = sys.argv[2]
+        logger.error(f"Insufficient arguments for notification given. Arguments received: {sys.argv}. Providing test response.")
+        title = "Test Notification"
+        message = "This is a test notification. Please provide title and message as arguments for actual notifications."
+    else:
+        title = sys.argv[1]
+        message = sys.argv[2]
     try:
         notif(title, message)
     except Exception as e:

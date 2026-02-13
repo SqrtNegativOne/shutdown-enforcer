@@ -7,6 +7,7 @@ from pathlib import Path
 import psutil
 from utils import logger
 
+
 _LOCAL_TZ = get_localzone()
 
 NOTIFY_WINDOW_TITLE: Final[str] = "Shutdown Enforcer"
@@ -25,8 +26,19 @@ POST_SHUTDOWN_REMINDER_WAIT_SECONDS: Final[int] = 60
 TASK_PREFIX: Final[str] = "ShutdownEnforcer_"
 
 ROOT_DIR = Path(__file__).parent.parent.resolve()
-SCRIPT_DIR = ROOT_DIR / "src"
 VENV_PY_EXE = ROOT_DIR / ".venv" / "Scripts" / "pythonw.exe"
+
+SCRIPT_DIR = ROOT_DIR / "src"
+NOTIFY_PY_FILE = SCRIPT_DIR / "notify.py" # ⚠️ .py instead of .pyw
+CLOSE_PY_FILE = SCRIPT_DIR / "close.pyw"
+SHUTDOWN_PY_FILE = SCRIPT_DIR / "shutdown.pyw"
+
+FILES = [
+    VENV_PY_EXE,
+    NOTIFY_PY_FILE,
+    CLOSE_PY_FILE,
+    SHUTDOWN_PY_FILE,
+]
 
 
 def is_admin() -> bool:
@@ -119,10 +131,15 @@ def create_task(name: str, command: str, run_time):
     run_cmd(cmd)
 
 
-def get_py_file_cmd(file_path: str, args: str = "") -> str:
-    return f'"{VENV_PY_EXE}" "{SCRIPT_DIR / file_path}" {args}'
+def get_py_file_cmd(py_file_path: Path, args: str = "") -> str:
+    return f'"{VENV_PY_EXE}" "{py_file_path}" {args}'
+
 
 def setup_tasks():
+    for file in FILES:
+        if not file.exists():
+            raise FileNotFoundError(f"Required file {file} not found. Ensure all necessary files are present before running setup.")
+
     if not is_admin():
         raise PermissionError("This script must be run with administrative privileges.")
 
@@ -142,37 +159,37 @@ def setup_tasks():
 
     create_task(
         "InitialNotif",
-        get_py_file_cmd("notify.pyw", f'"Closure in {closure_diff} minutes (at {APP_CLOSURE})"'),
+        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {closure_diff} minutes (at {APP_CLOSURE})"'),
         initial_notif
     )
 
     create_task(
         "PreClosure",
-        get_py_file_cmd("notify.pyw", f'"Closure in {CLOSURE_REACTION_SECONDS} seconds"'),
+        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {CLOSURE_REACTION_SECONDS} seconds"'),
         app_closure - timedelta(seconds=CLOSURE_REACTION_SECONDS)
     )
 
     create_task(
         "Closure",
-        get_py_file_cmd("close.pyw"),
+        get_py_file_cmd(CLOSE_PY_FILE),
         app_closure
     )
 
     create_task(
         "PostClosureNotif",
-        get_py_file_cmd("notify.pyw", f'"Closed. Shutdown in {shutdown_diff} minutes (at {SHUTDOWN})"'),
+        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closed. Shutdown in {shutdown_diff} minutes (at {SHUTDOWN})"'),
         app_closure + timedelta(seconds=CLOSURE_REACTION_SECONDS + 5)
     )
 
     create_task(
         "PreShutdown",
-        get_py_file_cmd("notify.pyw", f'"Shutdown in {SHUTDOWN_REACTION_SECONDS} seconds (at {SHUTDOWN})"'),
+        get_py_file_cmd(NOTIFY_PY_FILE, f'"Shutdown in {SHUTDOWN_REACTION_SECONDS} seconds (at {SHUTDOWN})"'),
         shutdown - timedelta(seconds=SHUTDOWN_REACTION_SECONDS)
     )
 
     create_task(
         "Shutdown",
-        get_py_file_cmd("shutdown.pyw"),
+        get_py_file_cmd(SHUTDOWN_PY_FILE),
         shutdown
     )
 

@@ -3,6 +3,7 @@ import win32gui
 import win32process
 import psutil
 from utils import logger
+from notify import notif
 
 app_closure_prompt = """All possible foreground windows have been closed.
 Now perform shutdown ritual.
@@ -34,7 +35,10 @@ def enum_window_callback(hwnd, _):
     except Exception as e:
         logger.error(f"Failed to close '{window_title}': {e}")
 
-try:
-    win32gui.EnumWindows(enum_window_callback, None)
-except Exception as e:
-    logger.error(f"Error in app_closure.pyw: {e}")
+if __name__ == "__main__":
+    try:
+        notif("Shutdown Enforcer", "Shutting down now.", ms=3000)
+        win32gui.EnumWindows(enum_window_callback, None)
+    except Exception as e:
+        logger.error(f"Error in app_closure.pyw: {e}")
+        notif("Shutdown Enforcer Error", f"An error occurred: {e}", ms=5000)
