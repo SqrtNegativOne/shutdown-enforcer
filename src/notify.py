@@ -4,7 +4,7 @@ from utils import logger
 BG_COLOR = 'black'
 TEXT_COLOR = 'white'
 
-SHOW_MILLISECONDS = 800
+SHOW_MILLISECONDS = 1200
 
 def notif(title, message, ms=SHOW_MILLISECONDS):
     logger.info(f"Notification: {title} - {message}")
