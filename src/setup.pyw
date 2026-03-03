@@ -181,6 +181,22 @@ def setup_tasks():
         app_closure + timedelta(seconds=CLOSURE_REACTION_SECONDS + 5)
     )
 
+    for mins in [10, 5, 2, 1]:
+        unit = "minute" if mins == 1 else "minutes"
+        create_task(
+            f"ClosureReminder{mins}min",
+            get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {mins} {unit} (at {APP_CLOSURE})"'),
+            app_closure - timedelta(minutes=mins)
+        )
+
+    for mins in [10, 5, 2, 1]:
+        unit = "minute" if mins == 1 else "minutes"
+        create_task(
+            f"ShutdownReminder{mins}min",
+            get_py_file_cmd(NOTIFY_PY_FILE, f'"Shutdown in {mins} {unit} (at {SHUTDOWN})"'),
+            shutdown - timedelta(minutes=mins)
+        )
+
     create_task(
         "PreShutdown",
         get_py_file_cmd(NOTIFY_PY_FILE, f'"Shutdown in {SHUTDOWN_REACTION_SECONDS} seconds (at {SHUTDOWN})"'),
