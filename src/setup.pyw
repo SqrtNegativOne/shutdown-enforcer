@@ -181,7 +181,7 @@ def setup_tasks():
         app_closure + timedelta(seconds=CLOSURE_REACTION_SECONDS + 5)
     )
 
-    for mins in [10, 5, 2, 1]:
+    for mins in [10, 5, 4, 3, 2, 1]:
         unit = "minute" if mins == 1 else "minutes"
         create_task(
             f"ClosureReminder{mins}min",
