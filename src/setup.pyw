@@ -150,35 +150,41 @@ def setup_tasks():
 
     delete_existing_tasks()
 
-    initial_notif = parse_time(INITIAL_NOTIF)
-    app_closure = parse_time(APP_CLOSURE)
-    shutdown = parse_time(SHUTDOWN)
+    initial_notif_time = parse_time(INITIAL_NOTIF)
+    app_closure_time = parse_time(APP_CLOSURE)
+    shutdown_time = parse_time(SHUTDOWN)
 
-    closure_diff = int((app_closure - initial_notif).total_seconds() // 60)
-    shutdown_diff = int((shutdown - app_closure).total_seconds() // 60)
+    closure_diff_mins = int((app_closure_time - initial_notif_time).total_seconds() // 60)
+    shutdown_diff_mins = int((shutdown_time - app_closure_time).total_seconds() // 60)
+
+    create_task(
+        "InitShutdown",
+        get_py_file_cmd(SHUTDOWN_PY_FILE, f'"{int((shutdown_time - now).total_seconds() // 60)}"'),
+        initial_notif_time
+    )
 
     create_task(
         "InitialNotif",
-        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {closure_diff} minutes (at {APP_CLOSURE})"'),
-        initial_notif
+        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {closure_diff_mins} minutes (at {APP_CLOSURE})"'),
+        initial_notif_time
     )
 
     create_task(
         "PreClosure",
         get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {CLOSURE_REACTION_SECONDS} seconds"'),
-        app_closure - timedelta(seconds=CLOSURE_REACTION_SECONDS)
+        app_closure_time - timedelta(seconds=CLOSURE_REACTION_SECONDS)
     )
 
     create_task(
         "Closure",
         get_py_file_cmd(CLOSE_PY_FILE),
-        app_closure
+        app_closure_time
     )
 
     create_task(
         "PostClosureNotif",
-        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closed. Shutdown in {shutdown_diff} minutes (at {SHUTDOWN})"'),
-        app_closure + timedelta(seconds=CLOSURE_REACTION_SECONDS + 5)
+        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closed. Shutdown in {shutdown_diff_mins} minutes (at {SHUTDOWN})"'),
+        app_closure_time + timedelta(seconds=CLOSURE_REACTION_SECONDS + 5)
     )
 
     for mins in [10, 5, 4, 3, 2, 1]:
@@ -186,7 +192,7 @@ def setup_tasks():
         create_task(
             f"ClosureReminder{mins}min",
             get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {mins} {unit} (at {APP_CLOSURE})"'),
-            app_closure - timedelta(minutes=mins)
+            app_closure_time - timedelta(minutes=mins)
         )
 
     for mins in [10, 5, 2, 1]:
@@ -194,19 +200,13 @@ def setup_tasks():
         create_task(
             f"ShutdownReminder{mins}min",
             get_py_file_cmd(NOTIFY_PY_FILE, f'"Shutdown in {mins} {unit} (at {SHUTDOWN})"'),
-            shutdown - timedelta(minutes=mins)
+            shutdown_time - timedelta(minutes=mins)
         )
 
     create_task(
         "PreShutdown",
         get_py_file_cmd(NOTIFY_PY_FILE, f'"Shutdown in {SHUTDOWN_REACTION_SECONDS} seconds (at {SHUTDOWN})"'),
-        shutdown - timedelta(seconds=SHUTDOWN_REACTION_SECONDS)
-    )
-
-    create_task(
-        "Shutdown",
-        get_py_file_cmd(SHUTDOWN_PY_FILE),
-        shutdown
+        shutdown_time - timedelta(seconds=SHUTDOWN_REACTION_SECONDS)
     )
 
     logger.info("All tasks created successfully.")
