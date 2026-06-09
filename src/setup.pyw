@@ -144,9 +144,9 @@ def setup_tasks():
         raise PermissionError("This script must be run with administrative privileges.")
 
     now = datetime.now(_LOCAL_TZ)
-    if now > parse_time(GIVE_UP_AFTER) or now < parse_time(GIVE_UP_BEFORE):
-        logger.info("Outside scheduling hours. Exiting.")
-        return
+    # if now > parse_time(GIVE_UP_AFTER) or now < parse_time(GIVE_UP_BEFORE):
+    #     logger.info("Outside scheduling hours. Exiting.")
+    #     return
 
     delete_existing_tasks()
 
