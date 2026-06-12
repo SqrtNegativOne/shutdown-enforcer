@@ -40,5 +40,5 @@ if __name__ == "__main__":
         notif("Shutdown Enforcer", "Shutting down in 30 minutes.", ms=3000)
         win32gui.EnumWindows(enum_window_callback, None)
     except Exception as e:
-        logger.error(f"Error in app_closure.pyw: {e}")
+        logger.error(f"Error in close.pyw: {e}")
         notif("Shutdown Enforcer Error", f"An error occurred: {e}", ms=5000)

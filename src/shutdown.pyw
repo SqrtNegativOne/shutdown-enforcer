@@ -1,5 +1,3 @@
-from multiprocessing.dummy import shutdown
-
 from notify import notif
 import subprocess
 import sys
@@ -11,13 +9,13 @@ def shutdown_and_notify(mins: int):
     notif("Shutdown Enforcer", f"Shutdown scheduled in {mins} minutes.", ms=3000)
 
 def main():
-    if len(sys.argv) < 1:
+    if len(sys.argv) < 2:
         notif("Shutdown Enforcer Error", f"No arguments provided. Shutting down in {DEFAULT_MINS} minutes.", ms=3000)
         shutdown_and_notify(DEFAULT_MINS)
         return
 
     try:
-        mins = int(sys.argv[0])
+        mins = int(sys.argv[1])
     except ValueError as ve:
         notif("Shutdown Enforcer Error", f"Invalid input for minutes: {ve}. Must be a positive integer. Shutting down in {DEFAULT_MINS} minutes.", ms=4000)
         shutdown_and_notify(DEFAULT_MINS)

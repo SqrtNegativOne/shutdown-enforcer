@@ -157,11 +157,19 @@ def setup_tasks():
     closure_diff_mins = int((app_closure_time - initial_notif_time).total_seconds() // 60)
     shutdown_diff_mins = int((shutdown_time - app_closure_time).total_seconds() // 60)
 
-    create_task(
-        "InitShutdown",
-        get_py_file_cmd(SHUTDOWN_PY_FILE, f'"{int((shutdown_time - now).total_seconds() // 60)}"'),
-        initial_notif_time
-    )
+    if now < initial_notif_time:
+        create_task(
+            "InitShutdown",
+            get_py_file_cmd(SHUTDOWN_PY_FILE, f'"{int((shutdown_time - initial_notif_time).total_seconds() // 60)}"'),
+            initial_notif_time
+        )
+    elif now < shutdown_time:
+        init_run_time = now + timedelta(seconds=15)
+        create_task(
+            "InitShutdown",
+            get_py_file_cmd(SHUTDOWN_PY_FILE, f'"{int((shutdown_time - init_run_time).total_seconds() // 60)}"'),
+            init_run_time
+        )
 
     create_task(
         "InitialNotif",
