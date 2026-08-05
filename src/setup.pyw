@@ -12,9 +12,10 @@ _LOCAL_TZ = get_localzone()
 
 NOTIFY_WINDOW_TITLE: Final[str] = "Shutdown Enforcer"
 
-INITIAL_NOTIF: Final[str] = "23:00"
-APP_CLOSURE: Final[str] = "23:45"
-SHUTDOWN: Final[str] = "23:59"
+APP_CLOSURE: Final[str] = "23:25"
+SHUTDOWN: Final[str] = "23:30"
+REMINDER_MINUTES_BEFORE: Final[list[int]] = [55, 10, 5, 4, 3, 2, 1]
+
 
 GIVE_UP_BEFORE: Final[str] = "05:00"
 GIVE_UP_AFTER: Final[str] = "23:30"
@@ -150,11 +151,15 @@ def setup_tasks():
 
     delete_existing_tasks()
 
-    initial_notif_time = parse_time(INITIAL_NOTIF)
     app_closure_time = parse_time(APP_CLOSURE)
     shutdown_time = parse_time(SHUTDOWN)
 
-    closure_diff_mins = int((app_closure_time - initial_notif_time).total_seconds() // 60)
+    if REMINDER_MINUTES_BEFORE:
+        max_reminder = max(REMINDER_MINUTES_BEFORE)
+        initial_notif_time = app_closure_time - timedelta(minutes=max_reminder)
+    else:
+        initial_notif_time = app_closure_time - timedelta(minutes=30)
+
     shutdown_diff_mins = int((shutdown_time - app_closure_time).total_seconds() // 60)
 
     if now < initial_notif_time:
@@ -170,12 +175,6 @@ def setup_tasks():
             get_py_file_cmd(SHUTDOWN_PY_FILE, f'"{int((shutdown_time - init_run_time).total_seconds() // 60)}"'),
             init_run_time
         )
-
-    create_task(
-        "InitialNotif",
-        get_py_file_cmd(NOTIFY_PY_FILE, f'"Closure in {closure_diff_mins} minutes (at {APP_CLOSURE})"'),
-        initial_notif_time
-    )
 
     create_task(
         "PreClosure",
@@ -195,7 +194,7 @@ def setup_tasks():
         app_closure_time + timedelta(seconds=CLOSURE_REACTION_SECONDS + 5)
     )
 
-    for mins in [10, 5, 4, 3, 2, 1]:
+    for mins in REMINDER_MINUTES_BEFORE:
         unit = "minute" if mins == 1 else "minutes"
         create_task(
             f"ClosureReminder{mins}min",
@@ -203,7 +202,7 @@ def setup_tasks():
             app_closure_time - timedelta(minutes=mins)
         )
 
-    for mins in [10, 5, 2, 1]:
+    for mins in REMINDER_MINUTES_BEFORE:
         unit = "minute" if mins == 1 else "minutes"
         create_task(
             f"ShutdownReminder{mins}min",
