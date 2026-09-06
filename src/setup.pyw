@@ -1,5 +1,7 @@
 import subprocess
 import ctypes
+import csv
+import io
 from datetime import datetime, timedelta
 from tzlocal import get_localzone
 from pathlib import Path
@@ -185,25 +187,47 @@ def run_cmd(args):
 
 def delete_existing_tasks():
     """Delete previously created ShutdownEnforcer tasks."""
+    if not TASK_PREFIX or not TASK_PREFIX.strip():
+        logger.warning(
+            "TASK_PREFIX is empty; skipping deletion to prevent deleting unrelated tasks."
+        )
+        return
+
     result = subprocess.run(
-        ["schtasks", "/query", "/fo", "CSV", "/v"],
+        ["schtasks", "/query", "/fo", "CSV", "/nh"],
         capture_output=True,
         text=True,
         encoding="utf-8",
+        errors="replace",
         startupinfo=_hidden_startupinfo(),
         creationflags=subprocess.CREATE_NO_WINDOW,
     )
-    for line in result.stdout.splitlines():
-        if TASK_PREFIX in line:
-            task_name = line.split(",")[0].strip('"')
-            logger.info(f"Deleting old task {task_name}")
-            subprocess.run(
-                ["schtasks", "/delete", "/tn", task_name, "/f"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+    if result.returncode != 0:
+        logger.error(f"Failed to query scheduled tasks: {result.stderr.strip()}")
+        return
+
+    prefixes = {p for p in (TASK_PREFIX, DEFAULT_CONFIG.get("task_prefix")) if p and p.strip()}
+    reader = csv.reader(io.StringIO(result.stdout))
+    for row in reader:
+        if not row:
+            continue
+        raw_task_name = row[0]
+        task_name = raw_task_name.lstrip("\\")
+        if any(task_name.startswith(prefix) for prefix in prefixes):
+            logger.info(f"Deleting old task {raw_task_name}")
+            del_result = subprocess.run(
+                ["schtasks", "/delete", "/tn", raw_task_name, "/f"],
+                capture_output=True,
+                text=True,
                 startupinfo=_hidden_startupinfo(),
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
+            if del_result.returncode == 0:
+                logger.info(f"Successfully deleted old task: {raw_task_name}")
+            else:
+                logger.warning(
+                    f"Failed to delete old task {raw_task_name}: {del_result.stderr.strip()}"
+                )
 
 
 def create_task(name: str, command: str, run_time):
