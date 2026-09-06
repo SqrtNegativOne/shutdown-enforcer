@@ -1,0 +1,28 @@
+# Shutdown Enforcer Configuration Template
+# Copy this file to config.yaml and customize it for your schedule.
+
+# Task Scheduler prefix for created tasks
+task_prefix: "ShutdownEnforcer_"
+
+# Notification popup window title
+notify_window_title: "Shutdown Enforcer"
+
+# Target times in HH:MM (24-hour format)
+# Note: Keep quotes around time strings
+app_closure: "23:50"
+shutdown: "23:55"
+
+# Reminder intervals (in minutes before closure and shutdown)
+reminder_minutes_before:
+  - 55
+  - 10
+  - 5
+  - 4
+  - 3
+  - 2
+  - 1
+
+# Reaction and wait intervals (in seconds)
+closure_reaction_seconds: 30
+shutdown_reaction_seconds: 30
+post_shutdown_reminder_wait_seconds: 60
